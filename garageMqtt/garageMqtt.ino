@@ -1,14 +1,14 @@
+#include "config.h"
+
 #ifdef ENC28J60
 #include <UIPEthernet.h>
 #else
 #include <Ethernet.h>
 #endif
-#include "PubSubClient.h"
 
 // https://github.com/depuits/AButt
 #include <AButt.h>
-
-#include "config.h"
+#include "PubSubClient.h"
 
 EthernetClient ethClient;
 PubSubClient mqttClient(ethClient);
@@ -16,13 +16,17 @@ AButt stateInput(CONFIG_PIN_STATE, true);
 
 void doorOpen() {
 	// the door is now open
+#ifdef CONFIG_DEBUG
 	Serial.print("Door open");
-    mqttClient.publish(CONFIG_MQTT_TOPIC_STATE, "1", true);
+#endif
+    mqttClient.publish(CONFIG_MQTT_TOPIC_STATE, CONFIG_MQTT_PAYLOAD_OPEN, true);
 }
 void doorClose() {
 	// the door has closed
+#ifdef CONFIG_DEBUG
 	Serial.print("Door closed");
-    mqttClient.publish(CONFIG_MQTT_TOPIC_STATE, "0", true);
+#endif
+    mqttClient.publish(CONFIG_MQTT_TOPIC_STATE, CONFIG_MQTT_PAYLOAD_CLOSE, true);
 }
 
 void processMessage(char* message) {
@@ -33,7 +37,7 @@ void processMessage(char* message) {
 		//TODO implement 
 	}
 	else if (strcmp(message, CONFIG_MQTT_PAYLOAD_TOGGLE) == 0) {
-		digitalWrite(CONFIG_PIN_TRIGGER, LOW);
+		digitalWrite(CONFIG_PIN_TRIGGER, HIGH);
 		delay(500);
 		digitalWrite(CONFIG_PIN_TRIGGER, LOW);
 	}
@@ -61,10 +65,14 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
 void setup() 
 {
+#ifdef CONFIG_DEBUG
+   Serial.println("start");
+#endif
+
     pinMode(CONFIG_PIN_STATE, INPUT_PULLUP);
 	pinMode(CONFIG_PIN_TRIGGER, OUTPUT);
 
-    stateInput.onHold(doorOpen, doorClose);
+    stateInput.onHold(doorClose, doorOpen);
     stateInput.setHoldDelay(500); // set the hold delay low so it's called quickly
 
 	// setup serial communication
@@ -79,7 +87,7 @@ void setup()
 #endif
 		while(true);
 	}
-
+ 
 	// setup mqtt client
 	mqttClient.setServer(CONFIG_MQTT_HOST, CONFIG_MQTT_PORT);
 	mqttClient.setCallback(mqttCallback);
