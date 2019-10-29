@@ -19,14 +19,14 @@ void doorOpen() {
 #ifdef CONFIG_DEBUG
 	Serial.print("Door open");
 #endif
-    mqttClient.publish(CONFIG_MQTT_TOPIC_STATE, CONFIG_MQTT_PAYLOAD_OPEN, true);
+	mqttClient.publish(CONFIG_MQTT_TOPIC_STATE, CONFIG_MQTT_PAYLOAD_OPEN, true);
 }
 void doorClose() {
 	// the door has closed
 #ifdef CONFIG_DEBUG
 	Serial.print("Door closed");
 #endif
-    mqttClient.publish(CONFIG_MQTT_TOPIC_STATE, CONFIG_MQTT_PAYLOAD_CLOSE, true);
+	mqttClient.publish(CONFIG_MQTT_TOPIC_STATE, CONFIG_MQTT_PAYLOAD_CLOSE, true);
 }
 
 void processMessage(char* message) {
@@ -65,15 +65,15 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
 void setup() 
 {
-#ifdef CONFIG_DEBUG
-   Serial.println("start");
-#endif
-
-    pinMode(CONFIG_PIN_STATE, INPUT_PULLUP);
+	pinMode(CONFIG_PIN_STATE, INPUT_PULLUP);
 	pinMode(CONFIG_PIN_TRIGGER, OUTPUT);
 
-    stateInput.onHold(doorClose, doorOpen);
-    stateInput.setHoldDelay(500); // set the hold delay low so it's called quickly
+#ifdef CONFIG_OPEN_ON_TRIGGER
+	stateInput.onHold(doorOpen, doorClose);
+#else
+	stateInput.onHold(doorClose, doorOpen);
+#endif
+	stateInput.setHoldDelay(500); // set the hold delay low so it's called quickly
 
 	// setup serial communication
 #ifdef CONFIG_DEBUG
@@ -124,7 +124,7 @@ void reconnect()
 
 void loop() 
 {
-  Ethernet.maintain(); 
+	Ethernet.maintain(); 
 	if (!mqttClient.connected()) 
 	{
 		reconnect();
@@ -132,5 +132,5 @@ void loop()
 
 	mqttClient.loop();
 
-    stateInput.update();
+	stateInput.update();
 }

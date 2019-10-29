@@ -26,6 +26,9 @@ uint8_t mac[6] = {0x00,0x01,0x02,0x03,0x04,0x05};
 #define CONFIG_MQTT_PAYLOAD_CLOSE "close"
 #define CONFIG_MQTT_PAYLOAD_TOGGLE "toggle"
 
+// Use this define when the door is open when the trigger is hit
+//#define CONFIG_OPEN_ON_TRIGGER
+
 // Enables Serial and print statements, comment out to disable
 //#define CONFIG_DEBUG
 
