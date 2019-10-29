@@ -1,0 +1,80 @@
+<!doctype html>
+<html class="no-js" lang="en">
+	<head>
+		<title>Garage</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+	</head>
+	<body>
+		<div id="app">
+			<h1>State</h1>
+			<p>{{ stateText }}</p>
+
+			<h2>Timers</h2>
+			<p v-if="timers.lenght <= 0">No running timers.</p>
+			<ul v-else>
+				<li v-for="t in timers">TODO</li>
+			</ul>
+
+			<h1>Update</h1>
+			<form @submit.prevent="submit">
+				<input type="number" min="0" max="30" placeholder="minutes" v-model="form.minutes" />
+				<input type="password" placeholder="password" v-model="form.password" />
+				<button type="submit">Toggle</button>
+
+				<p v-if="lastError" style="{ color: red; }">{{ lastError }}</p>
+			</form>
+		</div>
+
+		<script src="/socket.io/socket.io.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+		<!--<script src="https://cdn.jsdelivr.net/npm/vue"></script>-->
+		<script>
+			var app = new Vue({
+				el: '#app',
+				data: {
+					socket: null,
+					timers: [],
+					isOpen: false,
+					lastError: '',
+					form: {
+						minutes: undefined,
+						password: ''
+					}
+				},
+				created: function() {
+					this.socket = io();
+
+					var that = this;
+
+					//socket.io hooks
+					this.socket.on('error', function(msg){
+						that.lastError = msg;
+					});
+					this.socket.on('gateState', function(state) {
+						that.isOpen = (state == 'open');
+					});
+					this.socket.on('timers', function(timers){
+						that.timers = timers;
+					});
+				},
+				computed: {
+					stateText: function() {
+						return this.isOpen ? 'Open' : 'Closed';
+					}
+				},
+				methods: {
+					submit: function() {
+						socket.emit('gateToggle', this.form.password, this.form.minutes);
+
+						this.form.minutes = undefined;
+						this.form.password = '';
+					},
+					cancelTimer: function(timerId) {
+						socket.emit('cancelTimer', timerId);
+					}
+				}
+			});
+		</script>
+	</body>
+</html>
