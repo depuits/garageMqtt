@@ -1,1 +1,7 @@
 config.h
+
+# ignore all config files except the default
+config/
+!config/default.js
+
+node_modules/
