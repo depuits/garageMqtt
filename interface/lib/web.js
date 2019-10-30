@@ -16,11 +16,10 @@ console.log('setting up express service');
 
 app.use(morgan(':remote-addr - [:date[iso]] ":method :url" :status - :response-time ms - :res[content-length]'));
 app.use(bodyParser.json());
-app.use(cors());
 
 //app.use('/api', require('../routes')); // api endpoints
 
-app.use(express.static('../public')); // static resources
+app.use(express.static('public')); // static resources
 
 //const staticFileMiddleware = express.static('../client'); // client resources
 //app.use(staticFileMiddleware);

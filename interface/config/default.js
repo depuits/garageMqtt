@@ -9,15 +9,15 @@ var config = {
 		topicSet: 'home/garage/set',
 		
 		connection: {
-			host: "{MQTT-SERVER}"
+			host: '{MQTT-SERVER}',
 			port: 1883, // Usually 1883
-			username: "{MQTT-USERNAME}",
-			password: "{MQTT-PASSWORD}",
+			username: '{MQTT-USERNAME}',
+			password: '{MQTT-PASSWORD}',
 		},
 
-		payloadOpen: "open",
-		payloadClose: "close",
-		payloadToggle: "toggle",
+		payloadOpen: 'open',
+		payloadClose: 'close',
+		payloadToggle: 'toggle',
 	},
 };
 

@@ -65,13 +65,13 @@
 				},
 				methods: {
 					submit: function() {
-						socket.emit('gateToggle', this.form.password, this.form.minutes);
+						this.socket.emit('gateToggle', this.form.password, this.form.minutes);
 
 						this.form.minutes = undefined;
 						this.form.password = '';
 					},
 					cancelTimer: function(timerId) {
-						socket.emit('cancelTimer', timerId);
+						this.socket.emit('cancelTimer', timerId);
 					}
 				}
 			});
