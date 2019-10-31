@@ -13,7 +13,14 @@
 			<h2>Timers</h2>
 			<p v-if="timers.lenght <= 0">No running timers.</p>
 			<ul v-else>
-				<li v-for="t in timers">TODO</li>
+				<li v-for="t in timers">
+					<countdown :time="t.triggerTime - new Date">
+						<template slot-scope="props">
+							{{ props.minutes }} minutes, {{ props.seconds }} seconds.
+						</template>
+					</countdown>
+					<button @click="cancelTimer(t.id)">Cancel</button>
+				</li>
 			</ul>
 
 			<h1>Update</h1>
@@ -24,12 +31,17 @@
 
 				<p v-if="lastError" style="{ color: red; }">{{ lastError }}</p>
 			</form>
+
+			<p>{{ connected ? 'connected' : 'disconnected' }}</p>
 		</div>
 
 		<script src="/socket.io/socket.io.js"></script>
 		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 		<!--<script src="https://cdn.jsdelivr.net/npm/vue"></script>-->
+		<script src="vue-countdown.min.js"></script>
 		<script>
+			Vue.component(VueCountdown.name, VueCountdown);
+
 			var app = new Vue({
 				el: '#app',
 				data: {
@@ -48,29 +60,38 @@
 					var that = this;
 
 					//socket.io hooks
-					this.socket.on('error', function(msg){
+					this.socket.on('input-error', function(msg){
 						that.lastError = msg;
 					});
 					this.socket.on('gateState', function(state) {
 						that.isOpen = (state == 'open');
 					});
-					this.socket.on('timers', function(timers){
+					this.socket.on('timers', function(timers) {
 						that.timers = timers;
 					});
 				},
 				computed: {
 					stateText: function() {
 						return this.isOpen ? 'Open' : 'Closed';
+					},
+					connected: function() {
+						return this.socket.connected;
 					}
 				},
 				methods: {
 					submit: function() {
-						this.socket.emit('gateToggle', this.form.password, this.form.minutes);
+						let data = {
+							code: this.form.password,
+							seconds: this.form.minutes * 60,
+						}
+						this.lastError = '';
+						this.socket.emit('gateToggle', data);
 
 						this.form.minutes = undefined;
 						this.form.password = '';
 					},
 					cancelTimer: function(timerId) {
+						this.lastError = '';
 						this.socket.emit('cancelTimer', timerId);
 					}
 				}
