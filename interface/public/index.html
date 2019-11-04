@@ -25,17 +25,17 @@
 						<form @submit.prevent="submit" class="item">
 							<div class="nes-field">
 								<label for="minutes">Minutes</label>
-								<input type="text" id="minutes" class="nes-input" type="number" min="0" max="30" placeholder="minutes" v-model="form.minutes" />
+								<input type="number" id="minutes" class="nes-input" min="0" max="30" placeholder="minutes" v-model="form.minutes" />
 							</div>
 							
 							<div class="nes-field">
 								<label for="password">Password</label>
-								<input type="text" id="password" class="nes-input" type="password" placeholder="password" v-model="form.password" />
+								<input type="password" id="password" class="nes-input" placeholder="password" v-model="form.password" />
 							</div>
 
-							<button type="submit" class="nes-btn">Toggle</button>
+							<p class="nes-text is-error" v-if="lastError">{{ lastError }}</p>
 
-							<span class="nes-text is-error" v-if="lastError">{{ lastError }}</span>
+							<button type="submit" class="nes-btn">Toggle</button>
 						</form>
 					</div>
 				</section>
@@ -44,7 +44,7 @@
 					<div class="nes-container with-title">
 						<h3 class="title">Timers</h3>
 						<p v-if="timers.length <= 0">No running timers.</p>
-						<ul v-else  class="item">
+						<ul v-else  class="item nes-list is-disc">
 							<li v-for="t in timers">
 								<countdown :time="t.triggerTime - new Date">
 									<template slot-scope="props">
@@ -57,7 +57,7 @@
 					</div>
 				</section>
 
-				<p>{{ connected ? 'connected' : 'disconnected' }}</p>
+				<p :class="[ 'nes-text', connected ? 'is-success' : 'is-error']">{{ connected ? 'connected' : 'disconnected' }}</p>
 			</div>
 		</div>
 
