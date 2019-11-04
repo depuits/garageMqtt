@@ -3,14 +3,7 @@
 
 
 	<head>
-		<script>
-			// consider the base path for when the app is behind a reverse proxy and urls are rewritten
-			var baseHref = window.location.pathname;
-			
-			var base = document.createElement('base');
-			base.href = baseHref;
-			document.getElementsByTagName('head')[0].appendChild(base);
-		</script>
+		<base href="/" />
 		<title>Garage</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -90,11 +83,12 @@
 					}
 				},
 				created: function() {
-					var path = baseHref;
-					if (path.endsWith('/')) {
-						path = path.slice(0, -1);
+					// consider the base path for when the app is behind a reverse proxy and urls are rewritten
+					var baseHref = document.getElementsByTagName('base')[0].getAttribute('href');
+					if (baseHref.endsWith('/')) {
+						baseHref = baseHref.slice(0, -1);
 					}
-					var socketPath = path + '/socket.io';
+					var socketPath = baseHref + '/socket.io';
 
 					this.socket = io({ path: socketPath });
 
