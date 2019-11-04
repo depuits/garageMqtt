@@ -1,6 +1,7 @@
 <!doctype html>
 <html class="no-js" lang="en">
 	<head>
+		<base href="/" />
 		<title>Garage</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -80,7 +81,15 @@
 					}
 				},
 				created: function() {
-					this.socket = io();
+					// consider the base path for when the app is behind a reverse proxy and urls are rewritten
+					let baseHref = (document.getElementsByTagName('base')[0] || {}).getAttribute('href') || '';
+					if (baseHref.endsWith('/')) {
+						baseHref = baseHref.slice(0, -1);
+					}
+
+					let socketPath = baseHref + '/socket.io';
+
+					this.socket = io({ path: socketPath });
 
 					var that = this;
 
