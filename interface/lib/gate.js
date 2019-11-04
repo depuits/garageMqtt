@@ -13,17 +13,21 @@ const Gate = function(config) {
 			await gate.client.subscribe(config.topicState);
 
 			gate.client.on('message', function (topic, message) {
+				console.log('Gate receive: ' + message);
 				gate.isOpen = (message == config.payloadOpen);
 				gate.emit('change', message);
 			});
 		},
 		open: async function() {
+			console.log('Gate send: open');
 			await gate.client.publish(config.topicSet, config.payloadOpen);
 		},
 		close: async function() {
+			console.log('Gate send: close');
 			await gate.client.publish(config.topicSet, config.payloadClose);
 		},
 		toggle: async function() {
+			console.log('Gate send: toggle');
 			await gate.client.publish(config.topicSet, config.payloadToggle);
 		},
 	});

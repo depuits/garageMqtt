@@ -24,6 +24,7 @@ function sendTimers(socket) {
 function addTimer(time) {
 	let id = idCounter++;
 	let to = setTimeout(function() {
+		console.log('timer finished');
 		gate.toggle();
 		removeTimer(id);
 	}, time * 1000);
@@ -33,10 +34,12 @@ function addTimer(time) {
 		timeout: to,
 		triggerTime: new Date(Date.now() + time * 1000).getTime(),
 	});
+	console.log('timer added');
 
 	sendTimers();
 }
 function cancelTimer(id) {
+	console.log('timer canceled');
 	let index = timers.findIndex(t => t.id == id);
 	clearTimeout(timers[index].timeout);
 	removeTimer(id);
