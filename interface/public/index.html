@@ -6,14 +6,11 @@
 		<script>
 			// consider the base path for when the app is behind a reverse proxy and urls are rewritten
 			var baseHref = window.location.pathname;
-			if (baseHref.endsWith('/')) {
-				baseHref = baseHref.slice(0, -1);
-			}
+			
 			var base = document.createElement('base');
 			base.href = baseHref;
 			document.getElementsByTagName('head')[0].appendChild(base);
 		</script>
-
 		<title>Garage</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -73,7 +70,7 @@
 			</div>
 		</div>
 
-		<script src="/socket.io/socket.io.js"></script>
+		<script src="socket.io/socket.io.js"></script>
 		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 		<!--<script src="https://cdn.jsdelivr.net/npm/vue"></script>-->
 		<script src="vue-countdown.min.js"></script>
@@ -93,7 +90,11 @@
 					}
 				},
 				created: function() {
-					let socketPath = baseHref + '/socket.io';
+					var path = baseHref;
+					if (path.endsWith('/')) {
+						path = path.slice(0, -1);
+					}
+					var socketPath = path + '/socket.io';
 
 					this.socket = io({ path: socketPath });
 
