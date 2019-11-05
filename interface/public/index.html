@@ -1,7 +1,5 @@
 <!doctype html>
 <html class="no-js" lang="en">
-
-
 	<head>
 		<base href="/" />
 		<title>Garage</title>
@@ -47,10 +45,11 @@
 						<h3 class="title">Timers</h3>
 						<p v-if="timers.length <= 0">No running timers.</p>
 						<ul v-else  class="item nes-list is-disc">
-							<li v-for="t in timers">
+							<li v-for="t in orderedTimers">
+								{{ t.cmd }}: 
 								<countdown :time="t.triggerTime - new Date">
 									<template slot-scope="props">
-										{{ props.minutes }} minutes, {{ props.seconds }} seconds.
+										{{ props.minutes }} minutes, {{ String(props.seconds).padStart(2, '0') }} seconds.
 									</template>
 								</countdown>
 								<button @click="cancelTimer(t.id)" class="nes-btn is-error">Cancel</button>
@@ -59,7 +58,10 @@
 					</div>
 				</section>
 
-				<p :class="[ 'nes-text', connected ? 'is-success' : 'is-error']">{{ connected ? 'connected' : 'disconnected' }}</p>
+				<p :class="[ 'nes-text', connected ? 'is-success' : 'is-error']">
+					<i :class="[ 'nes-icon', 'is-small', 'heart', connected ? '' : 'is-empty' ]"></i> 
+					{{ connected ? 'connected' : 'disconnected' }}
+				</p>
 			</div>
 		</div>
 
@@ -111,6 +113,9 @@
 					},
 					connected: function() {
 						return this.socket.connected;
+					},
+					orderedTimers: function() {
+						return this.timers.sort(function(a, b) { return a.triggerTime - b.triggerTime; });
 					}
 				},
 				methods: {
@@ -118,9 +123,10 @@
 						let data = {
 							code: this.form.password,
 							seconds: this.form.minutes * 60,
+							cmd: 'Toggle'
 						}
 						this.lastError = '';
-						this.socket.emit('gateToggle', data);
+						this.socket.emit('commandGate', data);
 
 						this.form.minutes = undefined;
 						this.form.password = '';

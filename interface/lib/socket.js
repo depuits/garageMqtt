@@ -17,20 +17,35 @@ function sendGateStatus(socket) {
 function sendTimers(socket) {
 	//send the currently running timers
 	socket = socket ||io;
-	let data = timers.map(({ id, triggerTime }) => ({ id, triggerTime }));
+	let data = timers.map(({ id, cmd, triggerTime }) => ({ id, cmd, triggerTime }));
 	socket.emit('timers', data);
 }
 
-function addTimer(time) {
+function gateAction(cmd) {
+	switch (cmd) {
+		case 'Toggle':
+			gate.toggle();
+			break;
+		case 'Open':
+			gate.open();
+			break;
+		case 'Close':
+			gate.close();
+			break;
+	}
+}
+
+function addTimer(time, cmd) {
 	let id = idCounter++;
 	let to = setTimeout(function() {
 		console.log('timer finished');
-		gate.toggle();
+		gateAction(cmd);
 		removeTimer(id);
 	}, time * 1000);
 
 	timers.push({
 		id: id,
+		cmd: cmd,
 		timeout: to,
 		triggerTime: new Date(Date.now() + time * 1000).getTime(),
 	});
@@ -52,7 +67,7 @@ function removeTimer(id) {
 	sendTimers();
 }
 
-function toggleGate(socket, code, seconds) {
+function commandGate(socket, code, seconds, cmd) {
 	if (config.code && code !== config.code) {
 		socket.emit('input-error', 'Incorrect code.');
 		return;
@@ -60,10 +75,10 @@ function toggleGate(socket, code, seconds) {
 
 	if (seconds) {
 		//set timout
-		addTimer(seconds);
+		addTimer(seconds, cmd);
 	} else {
 		// toggle immediatly
-		gate.toggle();
+		gateAction(cmd);
 	}
 }
 
@@ -82,8 +97,8 @@ io.on('connection', function(socket){
 		console.log('user disconnected');
 	});
 
-	socket.on('gateToggle', function({ code, seconds }) {
-		toggleGate(socket, code, seconds);
+	socket.on('commandGate', function({ code, seconds, cmd }) {
+		commandGate(socket, code, seconds, cmd);
 	});
 	socket.on('cancelTimer', function(id) {
 		cancelTimer(id);
