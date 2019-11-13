@@ -10,6 +10,8 @@
 #include <AButt.h>
 #include "PubSubClient.h"
 
+#include <avr/wdt.h>
+
 EthernetClient ethClient;
 PubSubClient mqttClient(ethClient);
 AButt stateInput(CONFIG_PIN_STATE, true);
@@ -65,6 +67,8 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
 void setup() 
 {
+	wdt_disable(); //always good to disable it, if it was left 'on' or you need init time
+
 	pinMode(CONFIG_PIN_STATE, INPUT_PULLUP);
 	pinMode(CONFIG_PIN_TRIGGER, OUTPUT);
 
@@ -87,10 +91,12 @@ void setup()
 #endif
 		while(true);
 	}
- 
+
 	// setup mqtt client
 	mqttClient.setServer(CONFIG_MQTT_HOST, CONFIG_MQTT_PORT);
 	mqttClient.setCallback(mqttCallback);
+
+	wdt_enable(WDTO_8S); //enable it, and set it to 8s
 }
 
 void reconnect() 
@@ -118,12 +124,14 @@ void reconnect()
 #endif
 			// Wait 5 seconds before retrying
 			delay(5000);
+			wdt_reset();
 		}
 	}
 }
 
 void loop() 
 {
+	wdt_reset();
 	Ethernet.maintain(); 
 	if (!mqttClient.connected()) 
 	{
