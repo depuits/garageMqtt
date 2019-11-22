@@ -5,3 +5,4 @@ config/
 !config/default.js
 
 node_modules/
+.vscode/

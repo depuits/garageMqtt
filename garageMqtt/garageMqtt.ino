@@ -16,6 +16,8 @@ EthernetClient ethClient;
 PubSubClient mqttClient(ethClient);
 AButt stateInput(CONFIG_PIN_STATE, true);
 
+bool isOpen = false;
+
 void doorOpen() {
 	// the door is now open
 #ifdef CONFIG_DEBUG
@@ -33,15 +35,28 @@ void doorClose() {
 
 void processMessage(char* message) {
 	if (strcmp(message, CONFIG_MQTT_PAYLOAD_OPEN) == 0) {
-		//TODO implement 
+		if (!isOpen) {
+			digitalWrite(CONFIG_PIN_TOGGLE, HIGH);
+			delay(500);
+			digitalWrite(CONFIG_PIN_TOGGLE, LOW);
+		}
 	}
 	else if (strcmp(message, CONFIG_MQTT_PAYLOAD_CLOSE) == 0) {
-		//TODO implement 
+		digitalWrite(CONFIG_PIN_CLOSE, HIGH);
+		delay(500);
+		digitalWrite(CONFIG_PIN_CLOSE, LOW);
 	}
 	else if (strcmp(message, CONFIG_MQTT_PAYLOAD_TOGGLE) == 0) {
-		digitalWrite(CONFIG_PIN_TRIGGER, HIGH);
+		digitalWrite(CONFIG_PIN_TOGGLE, HIGH);
 		delay(500);
-		digitalWrite(CONFIG_PIN_TRIGGER, LOW);
+		digitalWrite(CONFIG_PIN_TOGGLE, LOW);
+	}
+	else if (strcmp(message, CONFIG_MQTT_PAYLOAD_OPENHALF) == 0) {
+		if (!isOpen) {
+			digitalWrite(CONFIG_PIN_TOGGLE50, HIGH);
+			delay(500);
+			digitalWrite(CONFIG_PIN_TOGGLE50, LOW);
+		}
 	}
 }
 
@@ -70,9 +85,11 @@ void setup()
 	wdt_disable(); //always good to disable it, if it was left 'on' or you need init time
 
 	pinMode(CONFIG_PIN_STATE, INPUT_PULLUP);
-	pinMode(CONFIG_PIN_TRIGGER, OUTPUT);
+	pinMode(CONFIG_PIN_TOGGLE, OUTPUT);
+	pinMode(CONFIG_PIN_CLOSE, OUTPUT);
+	pinMode(CONFIG_PIN_TOGGLE50, OUTPUT);
 
-#ifdef CONFIG_OPEN_ON_TRIGGER
+#ifdef CONFIG_IS_OPEN_ON_TRIGGER
 	stateInput.onHold(doorOpen, doorClose);
 #else
 	stateInput.onHold(doorClose, doorOpen);
@@ -141,4 +158,10 @@ void loop()
 	mqttClient.loop();
 
 	stateInput.update();
+#ifdef CONFIG_IS_OPEN_ON_TRIGGER
+	isOpen = stateInput.getState();
+#else
+	// open state is reversed by config
+	isOpen = !stateInput.getState();
+#endif
 }
