@@ -84,6 +84,12 @@ void setup()
 {
 	wdt_disable(); //always good to disable it, if it was left 'on' or you need init time
 
+	// setup serial communication
+#ifdef CONFIG_DEBUG
+	Serial.begin(9600);
+	Serial.println("Setup");
+#endif
+
 	pinMode(CONFIG_PIN_STATE, INPUT_PULLUP);
 	pinMode(CONFIG_PIN_TOGGLE, OUTPUT);
 	pinMode(CONFIG_PIN_CLOSE, OUTPUT);
@@ -96,9 +102,8 @@ void setup()
 #endif
 	stateInput.setHoldDelay(500); // set the hold delay low so it's called quickly
 
-	// setup serial communication
 #ifdef CONFIG_DEBUG
-	Serial.begin(9600);
+	Serial.println("setup mac");
 #endif
 	// setup ethernet communication using DHCP
 	if(Ethernet.begin(mac) == 0)
@@ -106,13 +111,19 @@ void setup()
 #ifdef CONFIG_DEBUG
 		Serial.println("Ethernet configuration using DHCP failed");
 #endif
-		while(true);
+	delay(5000);
+	asm volatile ("jmp 0");
 	}
+
+#ifdef CONFIG_DEBUG
+	Serial.println("Connecting to client");
+#endif
 
 	// setup mqtt client
 	mqttClient.setServer(CONFIG_MQTT_HOST, CONFIG_MQTT_PORT);
 	mqttClient.setCallback(mqttCallback);
 
+	// start watchdog so if the ethernet setup fails it restarts every 8 seconds
 	wdt_enable(WDTO_8S); //enable it, and set it to 8s
 }
 
@@ -168,6 +179,6 @@ void loop()
 	unsigned long time = millis();
 	if (time > 1000 * 60 * 60 * 12) {
 		//never keep the device running for longer then 12 hours
-		delay(20000); // this delay should trigger the watchdog
+		asm volatile ("jmp 0");
 	}
 }
