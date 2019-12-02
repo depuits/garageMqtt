@@ -80,7 +80,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 	processMessage(message);
 }
 
-void setup() 
+void setup()
 {
 	wdt_disable(); //always good to disable it, if it was left 'on' or you need init time
 
@@ -101,7 +101,7 @@ void setup()
 	Serial.begin(9600);
 #endif
 	// setup ethernet communication using DHCP
-	if(Ethernet.begin(mac) == 0) 
+	if(Ethernet.begin(mac) == 0)
 	{
 #ifdef CONFIG_DEBUG
 		Serial.println("Ethernet configuration using DHCP failed");
@@ -116,23 +116,23 @@ void setup()
 	wdt_enable(WDTO_8S); //enable it, and set it to 8s
 }
 
-void reconnect() 
+void reconnect()
 {
 	// Loop until we're reconnected
-	while (!mqttClient.connected()) 
+	while (!mqttClient.connected())
 	{
 #ifdef CONFIG_DEBUG
 		Serial.print("Attempting MQTT connection...");
 #endif
 		// Attempt to connect
-		if (mqttClient.connect(CONFIG_MQTT_CLIENT_ID, CONFIG_MQTT_USER, CONFIG_MQTT_PASS)) 
+		if (mqttClient.connect(CONFIG_MQTT_CLIENT_ID, CONFIG_MQTT_USER, CONFIG_MQTT_PASS))
 		{
 #ifdef CONFIG_DEBUG
 			Serial.println("connected");
 #endif
 			mqttClient.subscribe(CONFIG_MQTT_TOPIC_SET);
 		}
-		else 
+		else
 		{
 #ifdef CONFIG_DEBUG
 			Serial.print("failed, rc=");
@@ -146,11 +146,11 @@ void reconnect()
 	}
 }
 
-void loop() 
+void loop()
 {
 	wdt_reset();
-	Ethernet.maintain(); 
-	if (!mqttClient.connected()) 
+	Ethernet.maintain();
+	if (!mqttClient.connected())
 	{
 		reconnect();
 	}
@@ -164,4 +164,10 @@ void loop()
 	// open state is reversed by config
 	isOpen = !stateInput.getState();
 #endif
+
+	unsigned long time = millis();
+	if (time > 1000 * 60 * 60 * 12) {
+		//never keep the device running for longer then 12 hours
+		delay(20000); // this delay should trigger the watchdog
+	}
 }
