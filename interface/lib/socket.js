@@ -29,6 +29,9 @@ function gateAction(cmd) {
 		case 'Open':
 			gate.open();
 			break;
+		case 'Open50':
+			gate.open50();
+			break;
 		case 'Close':
 			gate.close();
 			break;

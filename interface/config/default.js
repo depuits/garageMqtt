@@ -18,6 +18,7 @@ var config = {
 		payloadOpen: 'open',
 		payloadClose: 'close',
 		payloadToggle: 'toggle',
+		payloadOpen50:'open50',
 	},
 };
 

@@ -30,6 +30,10 @@ const Gate = function(config) {
 			console.log('Gate send: toggle');
 			await gate.client.publish(config.topicSet, config.payloadToggle);
 		},
+		open50: async function() {
+			console.log('Gate send: open50');
+			await gate.client.publish(config.topicSet, config.payloadOpen50);
+		},
 	});
 };
 

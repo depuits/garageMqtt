@@ -36,9 +36,31 @@
 								<input type="password" id="password" class="nes-input" placeholder="password" v-model="form.password" />
 							</div>
 
+							<div class="nes-field">
+								<label>
+									<input type="radio" class="nes-radio" value="Toggle" v-model="form.cmd" />
+									<span>Toggle</span>
+								</label>
+
+								<label>
+									<input type="radio" class="nes-radio" value="Open" v-model="form.cmd" />
+									<span>Open</span>
+								</label>
+
+								<label>
+									<input type="radio" class="nes-radio" value="Open50" v-model="form.cmd" />
+									<span>Open half</span>
+								</label>
+
+								<label>
+									<input type="radio" class="nes-radio" value="Close" v-model="form.cmd" />
+									<span>Close</span>
+								</label>
+							</div>
+
 							<p class="nes-text is-error" v-if="lastError">{{ lastError }}</p>
 
-							<button type="submit" class="nes-btn">Toggle</button>
+							<button type="submit" class="nes-btn" :disabled="!connected">Toggle</button>
 						</form>
 					</div>
 				</section>
@@ -55,7 +77,7 @@
 										{{ props.minutes }} minutes, {{ String(props.seconds).padStart(2, '0') }} seconds.
 									</template>
 								</countdown>
-								<button @click="cancelTimer(t.id)" class="nes-btn is-error">Cancel</button>
+								<button @click="cancelTimer(t.id)" class="nes-btn is-error" :disabled="!connected">Cancel</button>
 							</li>
 						</ul>
 					</div>
@@ -84,7 +106,8 @@
 					lastError: '',
 					form: {
 						minutes: undefined,
-						password: ''
+						password: '',
+						cmd: 'Toggle'
 					}
 				},
 				created: function() {
@@ -123,16 +146,22 @@
 				},
 				methods: {
 					submit: function() {
+						if (!this.connected) {
+							this.lastError = 'Not connected!';
+							return; // don't do anyting if not connected
+						}
+
 						let data = {
 							code: this.form.password,
 							seconds: this.form.minutes * 60,
-							cmd: 'Toggle'
+							cmd: this.form.cmd
 						}
 						this.lastError = '';
 						this.socket.emit('commandGate', data);
 
 						this.form.minutes = undefined;
 						this.form.password = '';
+						this.form.cmd = 'Toggle';
 					},
 					cancelTimer: function(timerId) {
 						this.lastError = '';
