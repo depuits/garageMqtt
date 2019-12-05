@@ -111,8 +111,8 @@ void setup()
 #ifdef CONFIG_DEBUG
 		Serial.println("Ethernet configuration using DHCP failed");
 #endif
-	delay(5000);
-	asm volatile ("jmp 0");
+		delay(5000);
+		asm volatile ("jmp 0");
 	}
 
 #ifdef CONFIG_DEBUG
@@ -177,7 +177,8 @@ void loop()
 #endif
 
 	unsigned long time = millis();
-	if (time > 1000 * 60 * 60 * 12) {
+	unsigned long target = 1000l * 60l * 60l * 12l;
+	if (time > target) {
 		//never keep the device running for longer then 12 hours
 		asm volatile ("jmp 0");
 	}
