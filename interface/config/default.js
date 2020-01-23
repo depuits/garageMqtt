@@ -19,6 +19,8 @@ var config = {
 		payloadClose: 'close',
 		payloadToggle: 'toggle',
 		payloadOpen50:'open50',
+
+		autoClose: 5 * 60,
 	},
 };
 
