@@ -14,7 +14,12 @@
 
 EthernetClient ethClient;
 PubSubClient mqttClient(ethClient);
+
+#ifdef CONFIG_IS_OPEN_ON_TRIGGER
+AButt stateInput(CONFIG_PIN_STATE, false);
+#else
 AButt stateInput(CONFIG_PIN_STATE, true);
+#endif
 
 bool isOpen = false;
 
@@ -36,26 +41,26 @@ void doorClose() {
 void processMessage(char* message) {
 	if (strcmp(message, CONFIG_MQTT_PAYLOAD_OPEN) == 0) {
 		if (!isOpen) {
-			digitalWrite(CONFIG_PIN_TOGGLE, HIGH);
-			delay(500);
 			digitalWrite(CONFIG_PIN_TOGGLE, LOW);
+			delay(500);
+			digitalWrite(CONFIG_PIN_TOGGLE, HIGH);
 		}
 	}
 	else if (strcmp(message, CONFIG_MQTT_PAYLOAD_CLOSE) == 0) {
-		digitalWrite(CONFIG_PIN_CLOSE, HIGH);
-		delay(500);
 		digitalWrite(CONFIG_PIN_CLOSE, LOW);
+		delay(500);
+		digitalWrite(CONFIG_PIN_CLOSE, HIGH);
 	}
 	else if (strcmp(message, CONFIG_MQTT_PAYLOAD_TOGGLE) == 0) {
-		digitalWrite(CONFIG_PIN_TOGGLE, HIGH);
-		delay(500);
 		digitalWrite(CONFIG_PIN_TOGGLE, LOW);
+		delay(500);
+		digitalWrite(CONFIG_PIN_TOGGLE, HIGH);
 	}
 	else if (strcmp(message, CONFIG_MQTT_PAYLOAD_OPENHALF) == 0) {
 		if (!isOpen) {
-			digitalWrite(CONFIG_PIN_TOGGLE50, HIGH);
-			delay(500);
 			digitalWrite(CONFIG_PIN_TOGGLE50, LOW);
+			delay(500);
+			digitalWrite(CONFIG_PIN_TOGGLE50, HIGH);
 		}
 	}
 }
@@ -91,15 +96,17 @@ void setup()
 #endif
 
 	pinMode(CONFIG_PIN_STATE, INPUT_PULLUP);
-	pinMode(CONFIG_PIN_TOGGLE, OUTPUT);
-	pinMode(CONFIG_PIN_CLOSE, OUTPUT);
-	pinMode(CONFIG_PIN_TOGGLE50, OUTPUT);
 
-#ifdef CONFIG_IS_OPEN_ON_TRIGGER
+	pinMode(CONFIG_PIN_TOGGLE, OUTPUT);
+	digitalWrite(CONFIG_PIN_TOGGLE, HIGH);
+
+	pinMode(CONFIG_PIN_CLOSE, OUTPUT);
+	digitalWrite(CONFIG_PIN_CLOSE, HIGH);
+	
+	pinMode(CONFIG_PIN_TOGGLE50, OUTPUT);
+	digitalWrite(CONFIG_PIN_TOGGLE50, HIGH);
+
 	stateInput.onHold(doorOpen, doorClose);
-#else
-	stateInput.onHold(doorClose, doorOpen);
-#endif
 	stateInput.setHoldDelay(500); // set the hold delay low so it's called quickly
 
 #ifdef CONFIG_DEBUG
@@ -169,12 +176,7 @@ void loop()
 	mqttClient.loop();
 
 	stateInput.update();
-#ifdef CONFIG_IS_OPEN_ON_TRIGGER
 	isOpen = stateInput.getState();
-#else
-	// open state is reversed by config
-	isOpen = !stateInput.getState();
-#endif
 
 	unsigned long time = millis();
 	unsigned long target = 1000l * 60l * 60l * 12l;
