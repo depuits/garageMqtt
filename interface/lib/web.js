@@ -17,7 +17,7 @@ console.log('setting up express service');
 app.use(morgan(':remote-addr - [:date[iso]] ":method :url" :status - :response-time ms - :res[content-length]'));
 app.use(bodyParser.json());
 
-//app.use('/api', require('../routes')); // api endpoints
+app.use('/api', require('./api')); // api endpoints
 
 app.use(express.static('public')); // static resources
 
@@ -29,7 +29,7 @@ app.use(express.static('public')); // static resources
 const config = require('config');
 const port = config.get('port');
 
-http.listen(port, () => { 
+http.listen(port, () => {
 	console.log('Running at port ' + port);
 });
 
