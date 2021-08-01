@@ -21,6 +21,8 @@ AButt stateInput(CONFIG_PIN_STATE, false);
 AButt stateInput(CONFIG_PIN_STATE, true);
 #endif
 
+DHT dht(CONFIG_PIN_DHT, CONFIG_DHT_TYPE);
+
 bool isOpen = false;
 
 void doorOpen() {
@@ -126,12 +128,11 @@ void setup()
 	Serial.println("Connecting to client");
 #endif
 
+	dht.begin();
+
 	// setup mqtt client
 	mqttClient.setServer(CONFIG_MQTT_HOST, CONFIG_MQTT_PORT);
 	mqttClient.setCallback(mqttCallback);
-
-	// start watchdog so if the ethernet setup fails it restarts every 8 seconds
-	wdt_enable(WDTO_8S); //enable it, and set it to 8s
 }
 
 void reconnect()
@@ -139,11 +140,12 @@ void reconnect()
 	// Loop until we're reconnected
 	while (!mqttClient.connected())
 	{
+    Ethernet.maintain();
 #ifdef CONFIG_DEBUG
 		Serial.print("Attempting MQTT connection...");
 #endif
 		// Attempt to connect
-		if (mqttClient.connect(CONFIG_MQTT_CLIENT_ID, CONFIG_MQTT_USER, CONFIG_MQTT_PASS))
+		if (mqttClient.connect(CONFIG_MQTT_CLIENT_ID, CONFIG_MQTT_USER, CONFIG_MQTT_PASS, CONFIG_MQTT_WILL_TOPIC, CONFIG_MQTT_WILL_QOS, CONFIG_MQTT_WILL_RETAIN, CONFIG_MQTT_WILL_MSG))
 		{
 #ifdef CONFIG_DEBUG
 			Serial.println("connected");
@@ -159,14 +161,12 @@ void reconnect()
 #endif
 			// Wait 5 seconds before retrying
 			delay(5000);
-			wdt_reset();
 		}
 	}
 }
 
 void loop()
 {
-	wdt_reset();
 	Ethernet.maintain();
 	if (!mqttClient.connected())
 	{
@@ -177,6 +177,15 @@ void loop()
 
 	stateInput.update();
 	isOpen = stateInput.getState();
+
+
+	//TODO add timer delay of 5 seconds
+	// Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+	float h = dht.readHumidity();
+	// Read temperature as Fahrenheit (isFahrenheit = true)
+	float f = dht.readTemperature(CONFIG_DHT_FAHRENHEIT);
+
+
 
 	unsigned long time = millis();
 	unsigned long target = 1000l * 60l * 60l * 12l;

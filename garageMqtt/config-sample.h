@@ -1,5 +1,5 @@
 /*
- * This is a sample configuration file.
+ * This is a sample configuration file for the "mqtt_esp8266" light.
  *
  * Change the settings below and save the file as "config.h"
  * You can then upload the code using the Arduino IDE.
@@ -9,10 +9,20 @@
 uint8_t mac[6] = {0x00,0x01,0x02,0x03,0x04,0x05};
 
 // Button pin number, change to actual pin number
-#define CONFIG_PIN_STATE 5
-#define CONFIG_PIN_TOGGLE 10
-#define CONFIG_PIN_CLOSE 11
-#define CONFIG_PIN_TOGGLE50 12
+#define CONFIG_PIN_STATE 3
+#define CONFIG_PIN_TOGGLE 5
+#define CONFIG_PIN_CLOSE 6
+#define CONFIG_PIN_TOGGLE50 7
+
+// comment out if not using dht sensor
+// https://github.com/adafruit/DHT-sensor-library
+#include "DHT.h"
+#define CONFIG_PIN_DHT 2
+#define CONFIG_DHT_TYPE DHT11
+#define CONFIG_DHT_FAHRENHEIT false
+
+#define CONFIG_MQTT_TOPIC_TEMPERATURE "home/garage/temp"
+#define CONFIG_MQTT_TOPIC_HUMIDITY "home/garage/humid"
 
 // MQTT
 #define CONFIG_MQTT_HOST "{MQTT-SERVER}"
@@ -20,6 +30,11 @@ uint8_t mac[6] = {0x00,0x01,0x02,0x03,0x04,0x05};
 #define CONFIG_MQTT_USER "{MQTT-USERNAME}"
 #define CONFIG_MQTT_PASS "{MQTT-PASSWORD}"
 #define CONFIG_MQTT_CLIENT_ID "GARAGE_DOOR" // Must be unique on the MQTT network
+
+#define CONFIG_MQTT_WILL_TOPIC "mqtt"
+#define CONFIG_MQTT_WILL_QOS 0
+#define CONFIG_MQTT_WILL_RETAIN true
+#define CONFIG_MQTT_WILL_MSG "mqtt"
 
 #define CONFIG_MQTT_TOPIC_STATE "home/garage"
 #define CONFIG_MQTT_TOPIC_SET "home/garage/set"
