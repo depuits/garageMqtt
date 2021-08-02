@@ -21,7 +21,10 @@ AButt stateInput(CONFIG_PIN_STATE, false);
 AButt stateInput(CONFIG_PIN_STATE, true);
 #endif
 
+#ifdef CONFIG_PIN_DHT
+unsigned long dhtLastTime = 0;
 DHT dht(CONFIG_PIN_DHT, CONFIG_DHT_TYPE);
+#endif
 
 bool isOpen = false;
 
@@ -111,6 +114,10 @@ void setup()
 	stateInput.onHold(doorOpen, doorClose);
 	stateInput.setHoldDelay(500); // set the hold delay low so it's called quickly
 
+#ifdef CONFIG_PIN_DHT
+	dht.begin();
+#endif
+
 #ifdef CONFIG_DEBUG
 	Serial.println("setup mac");
 #endif
@@ -128,8 +135,6 @@ void setup()
 	Serial.println("Connecting to client");
 #endif
 
-	dht.begin();
-
 	// setup mqtt client
 	mqttClient.setServer(CONFIG_MQTT_HOST, CONFIG_MQTT_PORT);
 	mqttClient.setCallback(mqttCallback);
@@ -140,16 +145,17 @@ void reconnect()
 	// Loop until we're reconnected
 	while (!mqttClient.connected())
 	{
-    Ethernet.maintain();
+    	Ethernet.maintain();
 #ifdef CONFIG_DEBUG
 		Serial.print("Attempting MQTT connection...");
 #endif
 		// Attempt to connect
-		if (mqttClient.connect(CONFIG_MQTT_CLIENT_ID, CONFIG_MQTT_USER, CONFIG_MQTT_PASS, CONFIG_MQTT_WILL_TOPIC, CONFIG_MQTT_WILL_QOS, CONFIG_MQTT_WILL_RETAIN, CONFIG_MQTT_WILL_MSG))
+		if (mqttClient.connect(CONFIG_MQTT_CLIENT_ID, CONFIG_MQTT_USER, CONFIG_MQTT_PASS, CONFIG_MQTT_BLW_TOPIC, CONFIG_MQTT_BLW_QOS, CONFIG_MQTT_BLW_RETAIN, CONFIG_MQTT_BLW_WILL))
 		{
 #ifdef CONFIG_DEBUG
 			Serial.println("connected");
 #endif
+			mqttClient.publish(CONFIG_MQTT_BLW_TOPIC, CONFIG_MQTT_BLW_BIRTH, CONFIG_MQTT_BLW_RETAIN);
 			mqttClient.subscribe(CONFIG_MQTT_TOPIC_SET);
 		}
 		else
@@ -157,37 +163,52 @@ void reconnect()
 #ifdef CONFIG_DEBUG
 			Serial.print("failed, rc=");
 			Serial.print(mqttClient.state());
-			Serial.println(" try again in 5 seconds");
+			Serial.println(" trying again in 0.5 seconds");
 #endif
-			// Wait 5 seconds before retrying
-			delay(5000);
+			// Wait 0.5 seconds before retrying
+			delay(500);
 		}
 	}
+}
+
+void publishFloat(const char* topic, float val)
+{
+	constexpr size_t BUFFER_SIZE = 7; //1 char for the sign, 1 char for the decimal dot, 4 chars for the value & 1 char for null termination
+	char buffer[BUFFER_SIZE]; 
+	dtostrf(val, BUFFER_SIZE - 1 /*width, including the decimal dot and minus sign*/, 2 /*precision*/, buffer);
+	mqttClient.publish(topic, buffer, BUFFER_SIZE); //notice we're using the overload where you specify the length of the buffer, as we know it and it saves a call to strlen
 }
 
 void loop()
 {
 	Ethernet.maintain();
-	if (!mqttClient.connected())
+	
+	bool mqtConnected = mqttClient.loop();
+	if (!mqtConnected)
 	{
 		reconnect();
 	}
 
-	mqttClient.loop();
-
 	stateInput.update();
 	isOpen = stateInput.getState();
 
-
-	//TODO add timer delay of 5 seconds
-	// Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
-	float h = dht.readHumidity();
-	// Read temperature as Fahrenheit (isFahrenheit = true)
-	float f = dht.readTemperature(CONFIG_DHT_FAHRENHEIT);
-
-
-
 	unsigned long time = millis();
+
+#ifdef CONFIG_PIN_DHT
+	//limit readings
+	if (time - dhtLastTime > 5000l)
+	{
+		dhtLastTime = time;
+		// Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+		float h = dht.readHumidity();
+		// Read temperature (isFahrenheit = true)
+		float t = dht.readTemperature(CONFIG_DHT_FAHRENHEIT);
+
+		publishFloat(CONFIG_MQTT_TOPIC_HUMIDITY, h);
+		publishFloat(CONFIG_MQTT_TOPIC_TEMPERATURE, t);
+	}
+#endif
+
 	unsigned long target = 1000l * 60l * 60l * 12l;
 	if (time > target) {
 		//never keep the device running for longer then 12 hours

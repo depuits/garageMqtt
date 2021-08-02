@@ -31,10 +31,12 @@ uint8_t mac[6] = {0x00,0x01,0x02,0x03,0x04,0x05};
 #define CONFIG_MQTT_PASS "{MQTT-PASSWORD}"
 #define CONFIG_MQTT_CLIENT_ID "GARAGE_DOOR" // Must be unique on the MQTT network
 
-#define CONFIG_MQTT_WILL_TOPIC "mqtt"
-#define CONFIG_MQTT_WILL_QOS 0
-#define CONFIG_MQTT_WILL_RETAIN true
-#define CONFIG_MQTT_WILL_MSG "mqtt"
+// MQTT Birth and Last will
+#define CONFIG_MQTT_BLW_TOPIC "home/garage/status"
+#define CONFIG_MQTT_BLW_QOS 0
+#define CONFIG_MQTT_BLW_RETAIN true
+#define CONFIG_MQTT_BLW_WILL "offline"
+#define CONFIG_MQTT_BLW_BIRTH "online"
 
 #define CONFIG_MQTT_TOPIC_STATE "home/garage"
 #define CONFIG_MQTT_TOPIC_SET "home/garage/set"
